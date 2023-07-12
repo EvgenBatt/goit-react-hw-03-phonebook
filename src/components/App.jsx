@@ -3,6 +3,7 @@ import { Filter } from './Filter/Filter';
 import { ContactForm } from './ContactForm/ContactForm';
 import { ContactList } from './ContactList/ContactList';
 import { Title, SubTitle, EmptyContact } from './App.styled';
+import toast, { Toaster } from 'react-hot-toast';
 
 export class App extends Component {
   state = {
@@ -15,17 +16,29 @@ export class App extends Component {
     filter: '',
   };
 
+  componentDidMount() {
+    const LocalData = localStorage.getItem('users');
+    if (LocalData) this.setState({ contacts: JSON.parse(LocalData) });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.contacts !== this.state.contacts)
+      localStorage.setItem('users', JSON.stringify(this.state.contacts));
+  }
+
   changeFilter = ({ target: { value } }) => {
     this.setState({ filter: value });
   };
 
-  removeContact = contactId => {
-    this.setState(({ contacts }) => {
-      return { contacts: contacts.filter(({ id }) => id !== contactId) };
-    });
+  removeContact = id => {
+    toast.error('Delete user successfully');
+    this.setState(prev => ({
+      contacts: prev.contacts.filter(contact => contact.id !== id),
+    }));
   };
 
   addContact = contact => {
+    toast.success('Create new user successfully');
     this.setState(prevState => {
       const isExist = prevState.contacts.find(
         ({ name }) => name.toLowerCase() === contact.name.toLowerCase()
@@ -36,7 +49,7 @@ export class App extends Component {
         return;
       }
 
-      return { contacts: [...prevState.contacts, contact] };
+      return { contacts: [contact, ...prevState.contacts] };
     });
   };
 
@@ -61,10 +74,10 @@ export class App extends Component {
           justifyContent: 'center',
           alignItems: 'center',
           flexDirection: 'column',
-          fontSize: 40,
           color: '#010101',
         }}
       >
+        <Toaster />
         <Title>Phonebook</Title>
         <ContactForm onSubmit={this.addContact} />
         <SubTitle>Contacts</SubTitle>
